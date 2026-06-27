@@ -1,0 +1,3447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NabungKu - Aplikasi Tabungan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #10b981;
+            --secondary-color: #1e40af;
+            --bg-color: #e0e5ec;
+            --text-color: #2d3748;
+            --shadow-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --news-tips: #10b981;
+            --news-update: #3b82f6;
+            --news-info: #f59e0b;
+            --nav-color: #10b981;
+            --nav-bg-color: #10b981;
+            --progress-color: #3b82f6;
+            --marquee-bg: #e0e5ec;
+            --marquee-text: #2d3748;
+            --marquee-speed: 30s;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* Neumorphism Effect */
+        .neomorph {
+            background: var(--bg-color);
+            border-radius: 20px;
+            box-shadow: 8px 8px 16px var(--shadow-dark),
+                        -8px -8px 16px var(--shadow-light);
+        }
+
+        .neomorph-inset {
+            background: var(--bg-color);
+            border-radius: 15px;
+            box-shadow: inset 6px 6px 12px var(--shadow-dark),
+                        inset -6px -6px 12px var(--shadow-light);
+        }
+
+        .neomorph-flat {
+            background: var(--bg-color);
+            border-radius: 15px;
+            box-shadow: 4px 4px 8px var(--shadow-dark),
+                        -4px -4px 8px var(--shadow-light);
+        }
+
+        /* Splash Screen */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .splash-logo {
+            font-size: 80px;
+            color: white;
+            animation: logoFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .splash-text {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .splash-version {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 30px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .splash-footer {
+            position: absolute;
+            bottom: 30px;
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        /* Login Screen */
+        #loginScreen {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px 30px;
+        }
+
+        .login-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .role-card {
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .role-card.active {
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            color: white;
+        }
+
+        .role-card i {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: none;
+            outline: none;
+            background: var(--bg-color);
+            border-radius: 15px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                        inset -4px -4px 8px var(--shadow-light);
+            font-size: 16px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 4px 4px 8px var(--shadow-dark);
+            transition: all 0.3s;
+        }
+
+        .btn-login:active {
+            transform: scale(0.98);
+        }
+
+        /* Main App */
+        #mainApp {
+            display: none;
+            padding: 20px 20px 100px 20px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .app-header {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .role-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .greeting-text {
+            font-size: 11px;
+            color: var(--primary-color);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.3);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .balance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .wallet-icon {
+            font-size: 40px;
+        }
+
+        .status-badge {
+            background: var(--primary-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .balance-amount-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .toggle-balance {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .balance-label {
+            opacity: 0.9;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .balance-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.2);
+            margin: 20px 0;
+        }
+
+        .balance-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        /* Admin Menu */
+        .admin-menu {
+            margin-bottom: 20px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .menu-item {
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-item:active {
+            transform: scale(0.95);
+        }
+
+        .menu-item i {
+            font-size: 30px;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .menu-item span {
+            display: block;
+            font-size: 12px;
+            color: var(--text-color);
+        }
+
+        /* Marquee */
+        .crypto-ticker {
+            background: var(--marquee-bg);
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                        inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .ticker-content {
+            display: flex;
+            animation: scroll var(--marquee-speed) linear infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-item {
+            padding: 0 20px;
+            font-size: 12px;
+            color: var(--marquee-text);
+        }
+
+        .ticker-item .symbol {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Menu Section */
+        .section-title {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        /* Main Grid Menu */
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .grid-card {
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .grid-card:active {
+            transform: scale(0.98);
+        }
+
+        .grid-card i {
+            font-size: 35px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .grid-card .title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .grid-card .subtitle {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-color);
+            padding: 10px 20px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+            min-width: 60px;
+        }
+
+        .nav-item i {
+            font-size: 24px;
+            color: #9ca3af;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .nav-item.active i,
+        .nav-item.active span {
+            color: var(--nav-color);
+        }
+
+        .nav-spacer {
+            width: 80px;
+        }
+
+        .nav-center {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: var(--nav-bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            cursor: pointer;
+        }
+
+        .nav-center i {
+            font-size: 28px;
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #9ca3af;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            outline: none;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                        inset -4px -4px 8px var(--shadow-light);
+            font-size: 15px;
+            color: var(--text-color);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .amount-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: var(--bg-color);
+            box-shadow: 4px 4px 8px var(--shadow-dark),
+                        -4px -4px 8px var(--shadow-light);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-color);
+            transition: all 0.3s;
+        }
+
+        .amount-btn:active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                        inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 4px 4px 12px rgba(16, 185, 129, 0.3);
+            margin-top: 10px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 4px 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Search Box */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: none;
+            outline: none;
+            background: var(--bg-color);
+            border-radius: 15px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                        inset -4px -4px 8px var(--shadow-light);
+            font-size: 15px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        /* History Page */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .history-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .history-filter input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                        inset -4px -4px 8px var(--shadow-light);
+            font-size: 14px;
+        }
+
+        .btn-filter {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-reset {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 2px 2px 6px rgba(239, 68, 68, 0.3);
+        }
+
+        .transaction-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .transaction-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .transaction-icon.up {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .transaction-icon.down {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .transaction-info h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .transaction-info p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .transaction-amount {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .amount-positive {
+            color: var(--primary-color);
+        }
+
+        .amount-negative {
+            color: #ef4444;
+        }
+
+        /* News Page */
+        .news-item {
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+        }
+
+        .news-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .news-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-tips {
+            background: var(--news-tips);
+        }
+
+        .badge-update {
+            background: var(--news-update);
+        }
+
+        .badge-info {
+            background: var(--news-info);
+        }
+
+        .news-date {
+            font-size: 11px;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        .news-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .news-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+
+        /* Profile Page */
+        .profile-card {
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 25px;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: white;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .profile-detail {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Charts */
+        .chart-container {
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-color);
+            box-shadow: 4px 4px 8px var(--shadow-dark),
+                        -4px -4px 8px var(--shadow-light);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            color: white;
+            box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Participant List */
+        .participant-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+        }
+
+        .participant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .participant-main {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .participant-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .participant-info {
+            flex: 1;
+        }
+
+        .participant-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .participant-phone {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .participant-balance {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .participant-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .participant-progress {
+            margin-top: 10px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--progress-color), #60a5fa);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 4px 4px 8px var(--shadow-dark),
+                        -4px -4px 8px var(--shadow-light);
+            background: var(--bg-color);
+        }
+
+        .btn-icon i {
+            font-size: 16px;
+        }
+
+        .btn-icon.edit i {
+            color: #3b82f6;
+        }
+
+        .btn-icon.delete i {
+            color: #ef4444;
+        }
+
+        /* Radio Group */
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .radio-label input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        /* Page Container */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .loading i {
+            font-size: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* File Input Custom */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px 15px;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark),
+                        inset -4px -4px 8px var(--shadow-light);
+            cursor: pointer;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        /* Withdraw Confirmation */
+        .confirm-card {
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        }
+
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .confirm-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .confirm-label {
+            color: #6b7280;
+        }
+
+        .confirm-value {
+            font-weight: 600;
+        }
+
+        /* Warning Box Orange */
+        .warning-box {
+            background: linear-gradient(135deg, #fb923c, #f97316);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        .warning-box p {
+            font-size: 12px;
+            color: white;
+            text-align: center;
+            margin: 0;
+        }
+
+        .warning-box i {
+            color: white;
+        }
+
+        /* Print Options */
+        .print-options {
+            display: grid;
+            gap: 15px;
+        }
+
+        .print-option {
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .print-option:active {
+            transform: scale(0.98);
+        }
+
+        .print-option i {
+            font-size: 30px;
+            color: var(--primary-color);
+        }
+
+        .print-option-text h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .print-option-text p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* Settings Section */
+        .settings-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-section h4 {
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: var(--primary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .balance-amount {
+                font-size: 28px;
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+
+            .menu-item {
+                padding: 15px 5px;
+            }
+
+            .menu-item i {
+                font-size: 24px;
+            }
+
+            .menu-item span {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splashScreen">
+        <div class="splash-logo">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="splash-text">NabungKu</div>
+        <div class="splash-version">v.1.0</div>
+        <div class="loader"></div>
+        <div class="splash-footer">Samudra Tech 2026</div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-container neomorph">
+            <h2 class="login-title">
+                <i class="fas fa-money-bill-wave"></i> NabungKu
+            </h2>
+            
+            <div class="role-selector">
+                <div class="role-card neomorph-flat active" data-role="admin">
+                    <i class="fas fa-user-shield"></i>
+                    <div>Admin</div>
+                </div>
+                <div class="role-card neomorph-flat" data-role="user">
+                    <i class="fas fa-user"></i>
+                    <div>User</div>
+                </div>
+            </div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp">
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <div class="app-header">
+                <div class="role-indicator" id="roleIndicator">
+                    <i class="fas fa-user-shield"></i> <span id="roleText">Administrator</span>
+                </div>
+                <div class="greeting-text" id="greetingText">Selamat Pagi</div>
+            </div>
+
+            <!-- Balance Card -->
+            <div class="balance-card">
+                <div class="balance-header">
+                    <div class="wallet-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="status-badge">
+                        <div class="status-dot"></div>
+                        <span>Aktif</span>
+                    </div>
+                </div>
+                <div class="balance-label">Total Saldo</div>
+                <div class="balance-amount-row">
+                    <div class="balance-amount" id="totalBalance">Rp 0</div>
+                    <button class="toggle-balance" onclick="toggleBalance()">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+                
+                <div class="balance-divider"></div>
+                
+                <div class="balance-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statPeserta">0</div>
+                        <div class="stat-label">Peserta</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statTransaksi">0</div>
+                        <div class="stat-label">Transaksi</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statWithdraw">Rp 0</div>
+                        <div class="stat-label">Withdraw</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Menu -->
+            <div id="adminMenu" class="admin-menu">
+                <div class="menu-grid">
+                    <div class="menu-item neomorph-flat" onclick="backupData()">
+                        <i class="fas fa-download"></i>
+                        <span>Backup</span>
+                    </div>
+                    <div class="menu-item neomorph-flat" onclick="showRestoreModal()">
+                        <i class="fas fa-upload"></i>
+                        <span>Restore</span>
+                    </div>
+                    <div class="menu-item neomorph-flat" onclick="showNewsModal()">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Input News</span>
+                    </div>
+                    <div class="menu-item neomorph-flat" onclick="showSettingsModal()">
+                        <i class="fas fa-cog"></i>
+                        <span>Pengaturan</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crypto Ticker -->
+            <div class="crypto-ticker">
+                <div class="ticker-content" id="cryptoTicker">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Main Menu -->
+            <div class="section-title">Menu Utama</div>
+            <div class="main-grid">
+                <div class="grid-card neomorph" onclick="showParticipants()">
+                    <i class="fas fa-users"></i>
+                    <div class="title">Jumlah Peserta</div>
+                    <div class="subtitle" id="participantCount">0 Peserta</div>
+                </div>
+                <div class="grid-card neomorph" onclick="showAddSavingModal()">
+                    <i class="fas fa-plus-circle"></i>
+                    <div class="title">Tambah Tabungan</div>
+                    <div class="subtitle" id="savingCount">0 Transaksi</div>
+                </div>
+                <div class="grid-card neomorph" onclick="showRekapSaldo()">
+                    <i class="fas fa-chart-bar"></i>
+                    <div class="title">Rekap Saldo</div>
+                    <div class="subtitle">Grafik & Analisa</div>
+                </div>
+                <div class="grid-card neomorph" onclick="showWithdrawModal()">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <div class="title">Withdraw</div>
+                    <div class="subtitle">Tarik Saldo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Page -->
+        <div id="historyPage" class="page">
+            <div class="history-header">
+                <h2>Mutasi Keuangan</h2>
+                <button class="btn-reset" id="resetHistoryBtn" onclick="resetHistory()">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+            
+            <div class="history-filter">
+                <input type="date" id="filterDateFrom" class="form-input" placeholder="Dari Tanggal">
+                <input type="date" id="filterDateTo" class="form-input" placeholder="Sampai Tanggal">
+                <button class="btn-filter" onclick="filterHistory()">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+            
+            <div id="historyList">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- News Page -->
+        <div id="newsPage" class="page">
+            <h2 style="margin-bottom: 20px;">Berita & Informasi</h2>
+            <div id="newsList">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profilePage" class="page">
+            <div class="profile-card neomorph">
+                <div class="profile-photo">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="profile-name">Yudha Samudra, A.Md</div>
+            </div>
+            
+            <div class="profile-detail neomorph-flat">
+                <span class="detail-label">Status Pekerjaan</span>
+                <span class="detail-value">PPPK (KEMENHUB)</span>
+            </div>
+            
+            <div class="profile-detail neomorph-flat">
+                <span class="detail-label">NIP</span>
+                <span class="detail-value">198508122025211024</span>
+            </div>
+            
+            <div class="profile-detail neomorph-flat">
+                <span class="detail-label">Aplikasi</span>
+                <span class="detail-value">NabungKu v.1.0</span>
+            </div>
+            
+            <div class="profile-detail neomorph-flat">
+                <span class="detail-label">Developer</span>
+                <span class="detail-value">Samudra Tech 2026</span>
+            </div>
+
+            <button class="btn-primary btn-danger" onclick="logout()" style="margin-top: 20px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+
+        <!-- Participants Page -->
+        <div id="participantsPage" class="page">
+            <div class="history-header">
+                <h2>Daftar Peserta</h2>
+                <button class="btn-primary" id="addParticipantBtn" onclick="showAddParticipantModal()" style="padding: 8px 15px; font-size: 14px;">
+                    <i class="fas fa-plus"></i> Tambah
+                </button>
+            </div>
+            
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchParticipant" placeholder="Cari peserta..." onkeyup="searchParticipants()">
+            </div>
+            
+            <div id="participantsList">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Rekap Saldo Page -->
+        <div id="rekapPage" class="page">
+            <h2 style="margin-bottom: 20px;">Rekap Saldo</h2>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterRekap('all')">Semua</button>
+                <button class="filter-btn" onclick="filterRekap('today')">Hari Ini</button>
+                <button class="filter-btn" onclick="filterRekap('week')">Minggu Ini</button>
+                <button class="filter-btn" onclick="filterRekap('month')">Bulan Ini</button>
+            </div>
+
+            <div class="chart-container neomorph">
+                <h3 style="margin-bottom: 15px; font-size: 16px;">Grafik Tabungan per Peserta</h3>
+                <canvas id="barChart"></canvas>
+            </div>
+
+            <div class="chart-container neomorph">
+                <h3 style="margin-bottom: 15px; font-size: 16px;">Persentase Tabungan</h3>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <div class="nav-container neomorph">
+            <div class="nav-item active" onclick="switchPage('home')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('history')">
+                <i class="fas fa-history"></i>
+                <span>History</span>
+            </div>
+            <div class="nav-spacer"></div>
+            <div class="nav-item" onclick="switchPage('news')">
+                <i class="fas fa-newspaper"></i>
+                <span>News</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('profile')">
+                <i class="fas fa-user"></i>
+                <span>Profil</span>
+            </div>
+            <div class="nav-center" onclick="showPrintOptions()">
+                <i class="fas fa-print"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Participant Modal -->
+    <div id="addParticipantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Tambah Peserta</h3>
+                <button class="close-modal" onclick="closeModal('addParticipantModal')">&times;</button>
+            </div>
+            <form id="addParticipantForm">
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap</label>
+                    <input type="text" class="form-input" id="participantName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">No Telepon</label>
+                    <input type="tel" class="form-input" id="participantPhone" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jenis Rekening</label>
+                    <select class="form-select" id="participantBank" required>
+                        <option value="">Pilih Bank</option>
+                        <option value="Seabank">Seabank</option>
+                        <option value="Dana">Dana</option>
+                        <option value="Neobank">Neobank</option>
+                        <option value="BSI">BSI</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">No Rekening</label>
+                    <input type="text" class="form-input" id="participantAccount" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Setoran Awal</label>
+                    <input type="text" class="form-input" id="initialDeposit" value="0" readonly>
+                    <div class="amount-buttons">
+                        <button type="button" class="amount-btn" onclick="setAmount('initial', 5000)">5K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('initial', 10000)">10K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('initial', 25000)">25K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('initial', 50000)">50K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('initial', 100000)">100K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('initial', 0)">Reset</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Tabungan</label>
+                    <input type="text" class="form-input" id="targetAmount" value="0" readonly>
+                    <div class="amount-buttons">
+                        <button type="button" class="amount-btn" onclick="setAmount('target', 100000)">100K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('target', 500000)">500K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('target', 1000000)">1JT</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('target', 5000000)">5JT</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('target', 10000000)">10JT</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('target', 0)">Reset</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Participant Modal -->
+    <div id="editParticipantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Peserta</h3>
+                <button class="close-modal" onclick="closeModal('editParticipantModal')">&times;</button>
+            </div>
+            <form id="editParticipantForm">
+                <input type="hidden" id="editParticipantId">
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap</label>
+                    <input type="text" class="form-input" id="editParticipantName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">No Telepon</label>
+                    <input type="tel" class="form-input" id="editParticipantPhone" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jenis Rekening</label>
+                    <select class="form-select" id="editParticipantBank" required>
+                        <option value="Seabank">Seabank</option>
+                        <option value="Dana">Dana</option>
+                        <option value="Neobank">Neobank</option>
+                        <option value="BSI">BSI</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">No Rekening</label>
+                    <input type="text" class="form-input" id="editParticipantAccount" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Tabungan</label>
+                    <input type="text" class="form-input" id="editTargetAmount" value="0" readonly>
+                    <div class="amount-buttons">
+                        <button type="button" class="amount-btn" onclick="setAmount('editTarget', 100000)">100K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('editTarget', 500000)">500K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('editTarget', 1000000)">1JT</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('editTarget', 5000000)">5JT</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('editTarget', 10000000)">10JT</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('editTarget', 0)">Reset</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Update
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Saving Modal -->
+    <div id="addSavingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Tambah Tabungan</h3>
+                <button class="close-modal" onclick="closeModal('addSavingModal')">&times;</button>
+            </div>
+            <form id="addSavingForm">
+                <div class="form-group">
+                    <label class="form-label">Pilih Peserta</label>
+                    <select class="form-select" id="savingParticipant" required>
+                        <option value="">Pilih Peserta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jumlah Tabungan</label>
+                    <input type="text" class="form-input" id="savingAmount" value="0" readonly>
+                    <div class="amount-buttons">
+                        <button type="button" class="amount-btn" onclick="setAmount('saving', 5000)">5K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('saving', 10000)">10K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('saving', 25000)">25K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('saving', 50000)">50K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('saving', 100000)">100K</button>
+                        <button type="button" class="amount-btn" onclick="setAmount('saving', 0)">Reset</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Metode Deposit</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="depositMethod" value="Setor Tunai" required checked> Setor Tunai
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="depositMethod" value="Transfer" required> Transfer
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i> Proses
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Penarikan Saldo</h3>
+                <button class="close-modal" onclick="closeModal('withdrawModal')">&times;</button>
+            </div>
+            
+            <!-- Step 1: Form -->
+            <div id="withdrawStep1">
+                <div class="warning-box">
+                    <p><i class="fas fa-info-circle"></i> Penarikan saldo sesuai jumlah tabungan masing-masing peserta</p>
+                </div>
+                <form id="withdrawForm">
+                    <div class="form-group">
+                        <label class="form-label">Nama Peserta</label>
+                        <select class="form-select" id="withdrawParticipant" required onchange="updateWithdrawBalance()">
+                            <option value="">Pilih Peserta</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Saldo Tersedia</label>
+                        <input type="text" class="form-input" id="availableBalance" readonly style="font-weight: bold; color: var(--primary-color);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jumlah Penarikan</label>
+                        <input type="number" class="form-input" id="withdrawAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Metode Penarikan</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="withdrawMethod" value="Transfer" required> Transfer
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="withdrawMethod" value="Tarik Tunai" required> Tarik Tunai
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tujuan/Keterangan</label>
+                        <textarea class="form-textarea" id="withdrawNote" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Kirim Permintaan
+                    </button>
+                </form>
+            </div>
+
+            <!-- Step 2: Confirmation -->
+            <div id="withdrawStep2" style="display: none;">
+                <div class="confirm-card" id="withdrawConfirmDetail">
+                    <!-- Will be populated by JS -->
+                </div>
+                <button class="btn-primary" onclick="processWithdrawFinal()">
+                    <i class="fas fa-check"></i> Proses Penarikan
+                </button>
+                <button class="btn-primary btn-danger" onclick="cancelWithdraw()" style="margin-top: 10px;">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- News Input Modal -->
+    <div id="newsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Input Berita</h3>
+                <button class="close-modal" onclick="closeModal('newsModal')">&times;</button>
+            </div>
+            <form id="newsForm">
+                <div class="form-group">
+                    <label class="form-label">Badge Info</label>
+                    <select class="form-select" id="newsBadge" required>
+                        <option value="TIPS">TIPS</option>
+                        <option value="UPDATE">UPDATE</option>
+                        <option value="INFO">INFO</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tanggal</label>
+                    <input type="date" class="form-input" id="newsDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Judul Berita</label>
+                    <input type="text" class="form-input" id="newsTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Isi Berita</label>
+                    <textarea class="form-textarea" id="newsContent" required></textarea>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Simpan Berita
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Pengaturan</h3>
+                <button class="close-modal" onclick="closeModal('settingsModal')">&times;</button>
+            </div>
+            
+            <div class="settings-section">
+                <h4>Tema Warna News</h4>
+                <div class="form-group">
+                    <label class="form-label">Warna TIPS</label>
+                    <input type="color" class="form-input" id="colorTips" value="#10b981" onchange="updateThemeColor('tips', this.value)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warna UPDATE</label>
+                    <input type="color" class="form-input" id="colorUpdate" value="#3b82f6" onchange="updateThemeColor('update', this.value)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warna INFO</label>
+                    <input type="color" class="form-input" id="colorInfo" value="#f59e0b" onchange="updateThemeColor('info', this.value)">
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h4>Pengaturan Navigation</h4>
+                <div class="form-group">
+                    <label class="form-label">Warna Icon Navigation</label>
+                    <input type="color" class="form-input" id="colorNav" value="#10b981" onchange="updateNavColor(this.value)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warna Background Floating Button</label>
+                    <input type="color" class="form-input" id="colorNavBg" value="#10b981" onchange="updateNavBgColor(this.value)">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4>Pengaturan Text Marquee</h4>
+                <div class="form-group">
+                    <label class="form-label">Text Marquee (pisahkan dengan koma)</label>
+                    <textarea class="form-textarea" id="marqueeText" placeholder="IDR:15.850, BTC:1.425.000.000, ...">IDR:15.850, BTC:1.425.000.000, ETH:52.500.000, SOL:2.850.000, TON:95.000, GRASS:150.000, PI:250.000</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kecepatan Marquee (detik)</label>
+                    <input type="number" class="form-input" id="marqueeSpeed" value="30" min="5" max="60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warna Background Marquee</label>
+                    <input type="color" class="form-input" id="marqueeBg" value="#e0e5ec" onchange="updateMarqueeBg(this.value)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warna Text Marquee</label>
+                    <input type="color" class="form-input" id="marqueeTextColor" value="#2d3748" onchange="updateMarqueeTextColor(this.value)">
+                </div>
+            </div>
+            
+            <button class="btn-primary" onclick="saveThemeSettings()">
+                <i class="fas fa-save"></i> Simpan Pengaturan
+            </button>
+        </div>
+    </div>
+
+    <!-- Restore Modal -->
+    <div id="restoreModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Restore Data</h3>
+                <button class="close-modal" onclick="closeModal('restoreModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pilih File Backup (JSON)</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="restoreFile" accept=".json" onchange="handleRestoreFile(event)">
+                    <label for="restoreFile" class="file-input-label">
+                        <i class="fas fa-upload"></i> Pilih File
+                    </label>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="restoreData()">
+                <i class="fas fa-check"></i> Restore Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Print Options Modal -->
+    <div id="printOptionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Pilihan Cetak</h3>
+                <button class="close-modal" onclick="closeModal('printOptionsModal')">&times;</button>
+            </div>
+            <div class="print-options">
+                <div class="print-option neomorph-flat" onclick="printParticipantList()">
+                    <i class="fas fa-users"></i>
+                    <div class="print-option-text">
+                        <h4>Daftar Peserta</h4>
+                        <p>Detail peserta dengan tanggal bergabung & saldo awal</p>
+                    </div>
+                </div>
+                <div class="print-option neomorph-flat" onclick="printPerParticipant()">
+                    <i class="fas fa-user-circle"></i>
+                    <div class="print-option-text">
+                        <h4>Tabungan Per Peserta</h4>
+                        <p>Pilih peserta untuk mencetak detail tabungan</p>
+                    </div>
+                </div>
+                <div class="print-option neomorph-flat" onclick="printAllTransactions()">
+                    <i class="fas fa-receipt"></i>
+                    <div class="print-option-text">
+                        <h4>Semua Transaksi</h4>
+                        <p>Struk semua transaksi dalam format PDF</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Select Participant for Print Modal -->
+    <div id="selectParticipantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Pilih Peserta</h3>
+                <button class="close-modal" onclick="closeModal('selectParticipantModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nama Peserta</label>
+                <select class="form-select" id="printParticipantSelect">
+                    <option value="">Pilih Peserta</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="processPrintParticipant()">
+                <i class="fas fa-print"></i> Cetak
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let currentUser = null;
+        let currentRole = 'admin';
+        let balanceVisible = true;
+        let participants = [];
+        let transactions = [];
+        let news = [];
+        let selectedRole = 'admin';
+        let cryptoPrices = {};
+        let barChart = null;
+        let pieChart = null;
+        let withdrawData = null;
+        let marqueeTexts = [];
+
+        // Initialize App
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('splashScreen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('splashScreen').style.display = 'none';
+                    document.getElementById('loginScreen').style.display = 'flex';
+                }, 500);
+            }, 3000);
+
+            // Load data from localStorage
+            loadData();
+            
+            // Fetch crypto prices
+            fetchCryptoPrices();
+            
+            // Set current date for news
+            document.getElementById('newsDate').valueAsDate = new Date();
+            
+            // Update greeting
+            updateGreeting();
+        };
+
+        // Greeting Function
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            let greeting = '';
+            
+            if (hour >= 5 && hour < 11) {
+                greeting = 'Selamat Pagi';
+            } else if (hour >= 11 && hour < 15) {
+                greeting = 'Selamat Siang';
+            } else if (hour >= 15 && hour < 19) {
+                greeting = 'Selamat Sore';
+            } else {
+                greeting = 'Selamat Malam';
+            }
+            
+            document.getElementById('greetingText').textContent = greeting;
+        }
+
+        // Role Selection
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                selectedRole = this.dataset.role;
+            });
+        });
+
+        // Login Form
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (selectedRole === 'admin' && username === 'admin' && password === '120885') {
+                loginSuccess('admin', 'Administrator');
+            } else if (selectedRole === 'user' && username === 'bravo' && password === '1234') {
+                loginSuccess('user', 'Bravo');
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Gagal',
+                    text: 'Username atau password salah!',
+                    confirmButtonColor: '#10b981'
+                });
+            }
+        });
+
+        function loginSuccess(role, name) {
+            currentUser = name;
+            currentRole = role;
+            
+            // Sync data from server
+            syncDataFromServer();
+            
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('bottomNav').style.display = 'block';
+            
+            document.getElementById('roleText').textContent = name;
+            
+            // Hide/show elements based on role
+            if (role === 'user') {
+                document.getElementById('adminMenu').style.display = 'none';
+                document.getElementById('addParticipantBtn').style.display = 'none';
+                document.getElementById('resetHistoryBtn').style.display = 'none';
+            }
+            
+            updateDashboard();
+            updateGreeting();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Login Berhasil',
+                text: `Selamat datang, ${name}!`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        // Sync data from server
+        async function syncDataFromServer() {
+            Swal.fire({
+                title: 'Sinkronisasi Data',
+                html: 'Membaca data dari server...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // Add timestamp to avoid cache
+                const timestamp = new Date().getTime();
+                const response = await fetch(`nabungku_server_data.json?t=${timestamp}`);
+                
+                if (response.ok) {
+                    const serverData = await response.json();
+                    
+                    if (serverData.participants) participants = serverData.participants;
+                    if (serverData.transactions) transactions = serverData.transactions;
+                    if (serverData.news) news = serverData.news;
+                    
+                    saveData();
+                    updateDashboard();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sinkronisasi Berhasil',
+                        text: 'Data berhasil dimuat dari server',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error('Server file not found');
+                }
+            } catch (error) {
+                console.log('Error loading from server:', error);
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Data Lokal',
+                    text: 'Menggunakan data lokal (server tidak tersedia)',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'Logout',
+                text: 'Apakah Anda yakin ingin keluar?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    currentUser = null;
+                    currentRole = null;
+                    document.getElementById('mainApp').style.display = 'none';
+                    document.getElementById('bottomNav').style.display = 'none';
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                    
+                    // Reset visibility
+                    document.getElementById('adminMenu').style.display = 'block';
+                    document.getElementById('addParticipantBtn').style.display = 'block';
+                    document.getElementById('resetHistoryBtn').style.display = 'block';
+                    
+                    switchPage('home');
+                }
+            });
+        }
+
+        // Toggle Balance
+        function toggleBalance() {
+            balanceVisible = !balanceVisible;
+            const balanceEl = document.getElementById('totalBalance');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (balanceVisible) {
+                eyeIcon.className = 'fas fa-eye';
+                updateDashboard();
+            } else {
+                eyeIcon.className = 'fas fa-eye-slash';
+                balanceEl.textContent = 'Rp ••••••';
+            }
+        }
+
+        // Update Dashboard
+        function updateDashboard() {
+            const totalBalance = participants.reduce((sum, p) => sum + (p.balance || 0), 0);
+            const totalWithdraw = transactions.filter(t => t.type === 'withdraw').reduce((sum, t) => sum + t.amount, 0);
+            
+            if (balanceVisible) {
+                document.getElementById('totalBalance').textContent = formatCurrency(totalBalance);
+            }
+            
+            document.getElementById('statPeserta').textContent = participants.length;
+            document.getElementById('statTransaksi').textContent = transactions.length;
+            document.getElementById('statWithdraw').textContent = formatCurrency(totalWithdraw);
+            document.getElementById('participantCount').textContent = `${participants.length} Peserta`;
+            document.getElementById('savingCount').textContent = `${transactions.filter(t => t.type === 'saving').length} Transaksi`;
+        }
+
+        // Navigation
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            if (page === 'home') {
+                document.getElementById('homePage').classList.add('active');
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+            } else if (page === 'history') {
+                document.getElementById('historyPage').classList.add('active');
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                loadHistory();
+            } else if (page === 'news') {
+                document.getElementById('newsPage').classList.add('active');
+                document.querySelectorAll('.nav-item')[3].classList.add('active');
+                loadNews();
+            } else if (page === 'profile') {
+                document.getElementById('profilePage').classList.add('active');
+                document.querySelectorAll('.nav-item')[4].classList.add('active');
+            }
+        }
+
+        function showParticipants() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('participantsPage').classList.add('active');
+            loadParticipantsList();
+        }
+
+        function showRekapSaldo() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('rekapPage').classList.add('active');
+            loadCharts();
+        }
+
+        // Modals
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showAddParticipantModal() {
+            document.getElementById('addParticipantForm').reset();
+            document.getElementById('initialDeposit').value = '0';
+            document.getElementById('targetAmount').value = '0';
+            openModal('addParticipantModal');
+        }
+
+        function showAddSavingModal() {
+            if (participants.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada Peserta',
+                    text: 'Tambahkan peserta terlebih dahulu!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            const select = document.getElementById('savingParticipant');
+            select.innerHTML = '<option value="">Pilih Peserta</option>';
+            participants.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name} (${formatCurrency(p.balance || 0)})</option>`;
+            });
+            
+            document.getElementById('addSavingForm').reset();
+            document.getElementById('savingAmount').value = '0';
+            openModal('addSavingModal');
+        }
+
+        function showWithdrawModal() {
+            if (participants.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada Peserta',
+                    text: 'Tambahkan peserta terlebih dahulu!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            const select = document.getElementById('withdrawParticipant');
+            select.innerHTML = '<option value="">Pilih Peserta</option>';
+            participants.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name} (${formatCurrency(p.balance || 0)})</option>`;
+            });
+            
+            document.getElementById('withdrawForm').reset();
+            document.getElementById('availableBalance').value = '';
+            document.getElementById('withdrawStep1').style.display = 'block';
+            document.getElementById('withdrawStep2').style.display = 'none';
+            openModal('withdrawModal');
+        }
+
+        function showNewsModal() {
+            document.getElementById('newsForm').reset();
+            document.getElementById('newsDate').valueAsDate = new Date();
+            openModal('newsModal');
+        }
+
+        function showSettingsModal() {
+            // Load current settings
+            const savedMarquee = localStorage.getItem('marqueeText');
+            const savedSpeed = localStorage.getItem('marqueeSpeed') || '30';
+            
+            if (savedMarquee) {
+                document.getElementById('marqueeText').value = savedMarquee;
+            }
+            document.getElementById('marqueeSpeed').value = savedSpeed;
+            
+            openModal('settingsModal');
+        }
+
+        function showRestoreModal() {
+            openModal('restoreModal');
+        }
+
+        function showPrintOptions() {
+            openModal('printOptionsModal');
+        }
+
+        // Amount Setter
+        let currentAmount = {
+            initial: 0,
+            saving: 0,
+            target: 0,
+            editTarget: 0
+        };
+
+        function setAmount(type, amount) {
+            currentAmount[type] = amount;
+            if (type === 'initial') {
+                document.getElementById('initialDeposit').value = formatCurrency(amount);
+            } else if (type === 'saving') {
+                document.getElementById('savingAmount').value = formatCurrency(amount);
+            } else if (type === 'target') {
+                document.getElementById('targetAmount').value = formatCurrency(amount);
+            } else if (type === 'editTarget') {
+                document.getElementById('editTargetAmount').value = formatCurrency(amount);
+            }
+        }
+
+        // Add Participant
+        document.getElementById('addParticipantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const participant = {
+                id: Date.now(),
+                name: document.getElementById('participantName').value,
+                phone: document.getElementById('participantPhone').value,
+                bank: document.getElementById('participantBank').value,
+                account: document.getElementById('participantAccount').value,
+                balance: currentAmount.initial,
+                initialDeposit: currentAmount.initial,
+                target: currentAmount.target,
+                createdAt: new Date().toISOString()
+            };
+            
+            participants.push(participant);
+            
+            if (currentAmount.initial > 0) {
+                transactions.push({
+                    id: Date.now(),
+                    participantId: participant.id,
+                    participantName: participant.name,
+                    type: 'saving',
+                    amount: currentAmount.initial,
+                    date: new Date().toISOString(),
+                    note: 'Setoran Awal'
+                });
+            }
+            
+            saveData();
+            updateDashboard();
+            closeModal('addParticipantModal');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Peserta berhasil ditambahkan!',
+                confirmButtonColor: '#10b981'
+            });
+        });
+
+        // Edit Participant
+        function editParticipant(id) {
+            const participant = participants.find(p => p.id === id);
+            if (!participant) return;
+            
+            document.getElementById('editParticipantId').value = participant.id;
+            document.getElementById('editParticipantName').value = participant.name;
+            document.getElementById('editParticipantPhone').value = participant.phone;
+            document.getElementById('editParticipantBank').value = participant.bank;
+            document.getElementById('editParticipantAccount').value = participant.account;
+            
+            currentAmount.editTarget = participant.target || 0;
+            document.getElementById('editTargetAmount').value = formatCurrency(participant.target || 0);
+            
+            openModal('editParticipantModal');
+        }
+
+        document.getElementById('editParticipantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = parseInt(document.getElementById('editParticipantId').value);
+            const participant = participants.find(p => p.id === id);
+            
+            if (participant) {
+                participant.name = document.getElementById('editParticipantName').value;
+                participant.phone = document.getElementById('editParticipantPhone').value;
+                participant.bank = document.getElementById('editParticipantBank').value;
+                participant.account = document.getElementById('editParticipantAccount').value;
+                participant.target = currentAmount.editTarget;
+                
+                saveData();
+                loadParticipantsList();
+                closeModal('editParticipantModal');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Data peserta berhasil diupdate!',
+                    confirmButtonColor: '#10b981'
+                });
+            }
+        });
+
+        // Delete Participant
+        function deleteParticipant(id) {
+            Swal.fire({
+                title: 'Hapus Peserta',
+                text: 'Apakah Anda yakin ingin menghapus peserta ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    participants = participants.filter(p => p.id !== id);
+                    transactions = transactions.filter(t => t.participantId !== id);
+                    saveData();
+                    updateDashboard();
+                    loadParticipantsList();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Terhapus',
+                        text: 'Peserta berhasil dihapus!',
+                        confirmButtonColor: '#10b981'
+                    });
+                }
+            });
+        }
+
+        // Search Participants
+        function searchParticipants() {
+            const searchTerm = document.getElementById('searchParticipant').value.toLowerCase();
+            const filteredParticipants = participants.filter(p => 
+                p.name.toLowerCase().includes(searchTerm) || 
+                p.phone.includes(searchTerm)
+            );
+            loadParticipantsList(filteredParticipants);
+        }
+
+        // Load Participants List
+        function loadParticipantsList(filteredList = null) {
+            const list = document.getElementById('participantsList');
+            const displayList = filteredList || participants;
+            
+            if (displayList.length === 0) {
+                list.innerHTML = '<div class="loading"><i class="fas fa-users"></i><p>Belum ada peserta</p></div>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            displayList.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'participant-item neomorph-flat';
+                
+                const progress = p.target > 0 ? Math.min((p.balance / p.target) * 100, 100) : 0;
+                
+                let actions = '';
+                if (currentRole === 'admin') {
+                    actions = `
+                        <div class="participant-actions">
+                            <button class="btn-icon edit" onclick="editParticipant(${p.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon delete" onclick="deleteParticipant(${p.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                div.innerHTML = `
+                    <div class="participant-header">
+                        <div class="participant-main">
+                            <div class="participant-avatar">${p.name.charAt(0).toUpperCase()}</div>
+                            <div class="participant-info">
+                                <div class="participant-name">${p.name}</div>
+                                <div class="participant-phone">${p.phone} • ${p.bank}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="participant-balance">${formatCurrency(p.balance || 0)}</div>
+                        </div>
+                    </div>
+                    ${p.target > 0 ? `
+                    <div class="participant-progress">
+                        <div class="progress-label">
+                            <span>Target: ${formatCurrency(p.target)}</span>
+                            <span>${progress.toFixed(1)}%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${actions}
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // Add Saving
+        document.getElementById('addSavingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const participantId = parseInt(document.getElementById('savingParticipant').value);
+            const amount = currentAmount.saving;
+            const method = document.querySelector('input[name="depositMethod"]:checked').value;
+            
+            if (amount === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Peringatan',
+                    text: 'Silakan pilih jumlah tabungan!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            const participant = participants.find(p => p.id === participantId);
+            if (!participant) return;
+            
+            participant.balance = (participant.balance || 0) + amount;
+            
+            const transaction = {
+                id: Date.now(),
+                participantId: participant.id,
+                participantName: participant.name,
+                type: 'saving',
+                amount: amount,
+                method: method,
+                date: new Date().toISOString(),
+                note: `Tambah Tabungan (${method})`
+            };
+            
+            transactions.push(transaction);
+            
+            saveData();
+            updateDashboard();
+            closeModal('addSavingModal');
+            
+            // Send to WhatsApp
+            const message = `*NOTIFIKASI TABUNGAN*\n\n` +
+                          `Nama: ${participant.name}\n` +
+                          `Jumlah: ${formatCurrency(amount)}\n` +
+                          `Metode: ${method}\n` +
+                          `Tanggal: ${new Date().toLocaleString('id-ID')}\n` +
+                          `Saldo Total: ${formatCurrency(participant.balance)}`;
+            
+            const whatsappUrl = `https://wa.me/6285793627679?text=${encodeURIComponent(message)}`;
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Tabungan berhasil ditambahkan! Kirim notifikasi ke admin?',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Kirim WhatsApp',
+                cancelButtonText: 'Tidak'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.open(whatsappUrl, '_blank');
+                }
+            });
+        });
+
+        // Update Withdraw Balance
+        function updateWithdrawBalance() {
+            const participantId = parseInt(document.getElementById('withdrawParticipant').value);
+            const participant = participants.find(p => p.id === participantId);
+            
+            if (participant) {
+                document.getElementById('availableBalance').value = formatCurrency(participant.balance || 0);
+            } else {
+                document.getElementById('availableBalance').value = '';
+            }
+        }
+
+        // Withdraw
+        document.getElementById('withdrawForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const participantId = parseInt(document.getElementById('withdrawParticipant').value);
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const method = document.querySelector('input[name="withdrawMethod"]:checked').value;
+            const note = document.getElementById('withdrawNote').value;
+            
+            const participant = participants.find(p => p.id === participantId);
+            if (!participant) return;
+            
+            if (amount > participant.balance) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Saldo Tidak Cukup',
+                    text: 'Jumlah penarikan melebihi saldo tersedia!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            // Store withdraw data
+            withdrawData = {
+                participant,
+                amount,
+                method,
+                note
+            };
+            
+            // Show confirmation step
+            document.getElementById('withdrawStep1').style.display = 'none';
+            document.getElementById('withdrawStep2').style.display = 'block';
+            
+            // Populate confirmation
+            const confirmDetail = document.getElementById('withdrawConfirmDetail');
+            confirmDetail.innerHTML = `
+                <div class="confirm-row">
+                    <span class="confirm-label">Nama Peserta</span>
+                    <span class="confirm-value">${participant.name}</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">Saldo Tersedia</span>
+                    <span class="confirm-value">${formatCurrency(participant.balance)}</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">Jumlah Penarikan</span>
+                    <span class="confirm-value">${formatCurrency(amount)}</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">Metode</span>
+                    <span class="confirm-value">${method}</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">Keterangan</span>
+                    <span class="confirm-value">${note}</span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">Sisa Saldo</span>
+                    <span class="confirm-value">${formatCurrency(participant.balance - amount)}</span>
+                </div>
+            `;
+        });
+
+        function cancelWithdraw() {
+            document.getElementById('withdrawStep1').style.display = 'block';
+            document.getElementById('withdrawStep2').style.display = 'none';
+            withdrawData = null;
+        }
+
+        function processWithdrawFinal() {
+            if (!withdrawData) return;
+            
+            const { participant, amount, method, note } = withdrawData;
+            
+            // Update balance
+            participant.balance -= amount;
+            
+            // Add transaction
+            transactions.push({
+                id: Date.now(),
+                participantId: participant.id,
+                participantName: participant.name,
+                type: 'withdraw',
+                amount: amount,
+                method: method,
+                date: new Date().toISOString(),
+                note: note
+            });
+            
+            saveData();
+            updateDashboard();
+            closeModal('withdrawModal');
+            
+            // Send WhatsApp message
+            const message = `*PERMINTAAN PENARIKAN SALDO*\n\n` +
+                          `Nama: ${participant.name}\n` +
+                          `No. HP: ${participant.phone}\n` +
+                          `Bank: ${participant.bank}\n` +
+                          `No. Rekening: ${participant.account}\n` +
+                          `Jumlah Penarikan: ${formatCurrency(amount)}\n` +
+                          `Metode: ${method}\n` +
+                          `Keterangan: ${note}\n` +
+                          `Tanggal: ${new Date().toLocaleString('id-ID')}\n\n` +
+                          `Sisa Saldo: ${formatCurrency(participant.balance)}`;
+            
+            const whatsappUrl = `https://wa.me/6285793627679?text=${encodeURIComponent(message)}`;
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Permintaan Terkirim',
+                text: 'Permintaan penarikan akan dikirim ke admin via WhatsApp',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'Kirim ke WhatsApp'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.open(whatsappUrl, '_blank');
+                }
+            });
+            
+            withdrawData = null;
+        }
+
+        // History
+        let filteredTransactions = [];
+
+        function loadHistory(filtered = null) {
+            const list = document.getElementById('historyList');
+            const displayTransactions = filtered || transactions;
+            
+            if (displayTransactions.length === 0) {
+                list.innerHTML = '<div class="loading"><i class="fas fa-history"></i><p>Belum ada transaksi</p></div>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            const sortedTransactions = [...displayTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedTransactions.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'transaction-item neomorph-flat';
+                const isPositive = t.type === 'saving';
+                
+                div.innerHTML = `
+                    <div class="transaction-info">
+                        <div class="transaction-icon ${isPositive ? 'up' : 'down'}">
+                            <i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i>
+                        </div>
+                        <div>
+                            <h4>${t.participantName}</h4>
+                            <p>${t.note} • ${new Date(t.date).toLocaleString('id-ID')}</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount ${isPositive ? 'amount-positive' : 'amount-negative'}">
+                        ${isPositive ? '+' : '-'}${formatCurrency(t.amount)}
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function filterHistory() {
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+            
+            if (!dateFrom && !dateTo) {
+                loadHistory();
+                return;
+            }
+            
+            const filtered = transactions.filter(t => {
+                const transDate = new Date(t.date).toISOString().split('T')[0];
+                
+                if (dateFrom && dateTo) {
+                    return transDate >= dateFrom && transDate <= dateTo;
+                } else if (dateFrom) {
+                    return transDate >= dateFrom;
+                } else if (dateTo) {
+                    return transDate <= dateTo;
+                }
+                return true;
+            });
+            
+            loadHistory(filtered);
+        }
+
+        function resetHistory() {
+            Swal.fire({
+                title: 'Reset History',
+                text: 'Apakah Anda yakin ingin menghapus semua riwayat transaksi?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Reset',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    transactions = [];
+                    saveData();
+                    loadHistory();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'History berhasil direset!',
+                        confirmButtonColor: '#10b981'
+                    });
+                }
+            });
+        }
+
+        // News
+        document.getElementById('newsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newsItem = {
+                id: Date.now(),
+                badge: document.getElementById('newsBadge').value,
+                date: document.getElementById('newsDate').value,
+                title: document.getElementById('newsTitle').value,
+                content: document.getElementById('newsContent').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            news.push(newsItem);
+            saveData();
+            closeModal('newsModal');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Berita berhasil ditambahkan!',
+                confirmButtonColor: '#10b981'
+            });
+        });
+
+        function loadNews() {
+            const list = document.getElementById('newsList');
+            
+            if (news.length === 0) {
+                list.innerHTML = '<div class="loading"><i class="fas fa-newspaper"></i><p>Belum ada berita</p></div>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            const sortedNews = [...news].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            sortedNews.forEach(n => {
+                const div = document.createElement('div');
+                div.className = 'news-item neomorph-flat';
+                div.innerHTML = `
+                    <div class="news-header-row">
+                        <span class="news-badge badge-${n.badge.toLowerCase()}">${n.badge}</span>
+                        <div class="news-date"><i class="fas fa-calendar"></i> ${new Date(n.date).toLocaleDateString('id-ID')}</div>
+                    </div>
+                    <div class="news-title">${n.title}</div>
+                    <div class="news-content">${n.content}</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // Theme Settings
+        function updateThemeColor(type, color) {
+            document.documentElement.style.setProperty(`--news-${type}`, color);
+        }
+
+        function updateNavColor(color) {
+            document.documentElement.style.setProperty('--nav-color', color);
+        }
+
+        function updateNavBgColor(color) {
+            document.documentElement.style.setProperty('--nav-bg-color', color);
+        }
+
+        function updateMarqueeBg(color) {
+            document.documentElement.style.setProperty('--marquee-bg', color);
+        }
+
+        function updateMarqueeTextColor(color) {
+            document.documentElement.style.setProperty('--marquee-text', color);
+        }
+
+        function saveThemeSettings() {
+            const settings = {
+                tips: document.getElementById('colorTips').value,
+                update: document.getElementById('colorUpdate').value,
+                info: document.getElementById('colorInfo').value,
+                nav: document.getElementById('colorNav').value,
+                navBg: document.getElementById('colorNavBg').value,
+                marqueeBg: document.getElementById('marqueeBg').value,
+                marqueeText: document.getElementById('marqueeTextColor').value
+            };
+            
+            const marqueeText = document.getElementById('marqueeText').value;
+            const marqueeSpeed = document.getElementById('marqueeSpeed').value;
+            
+            localStorage.setItem('themeSettings', JSON.stringify(settings));
+            localStorage.setItem('marqueeText', marqueeText);
+            localStorage.setItem('marqueeSpeed', marqueeSpeed);
+            
+            // Update marquee speed
+            document.documentElement.style.setProperty('--marquee-speed', `${marqueeSpeed}s`);
+            
+            updateCryptoTicker();
+            
+            closeModal('settingsModal');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Pengaturan berhasil disimpan!',
+                confirmButtonColor: '#10b981'
+            });
+        }
+
+        // Backup & Restore
+        function backupData() {
+            const data = {
+                participants,
+                transactions,
+                news,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `nabungku_backup_${new Date().getTime()}.json`;
+            link.click();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Backup Berhasil',
+                text: 'Data berhasil dibackup! Upload file ke server/nabungku_server_data.json untuk sinkronisasi',
+                confirmButtonColor: '#10b981'
+            });
+        }
+
+        let restoreFileData = null;
+
+        function handleRestoreFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    restoreFileData = JSON.parse(e.target.result);
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Tidak Valid',
+                        text: 'File backup tidak valid!',
+                        confirmButtonColor: '#10b981'
+                    });
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function restoreData() {
+            if (!restoreFileData) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilih File',
+                    text: 'Silakan pilih file backup terlebih dahulu!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Restore Data',
+                text: 'Data saat ini akan diganti dengan data backup. Lanjutkan?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Restore',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    participants = restoreFileData.participants || [];
+                    transactions = restoreFileData.transactions || [];
+                    news = restoreFileData.news || [];
+                    
+                    saveData();
+                    updateDashboard();
+                    closeModal('restoreModal');
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data berhasil direstore!',
+                        confirmButtonColor: '#10b981'
+                    });
+                }
+            });
+        }
+
+        // Charts
+        function loadCharts() {
+            if (!participants.length) {
+                return;
+            }
+            
+            const ctx1 = document.getElementById('barChart');
+            const ctx2 = document.getElementById('pieChart');
+            
+            const labels = participants.map(p => p.name);
+            const data = participants.map(p => p.balance || 0);
+            const colors = [
+                '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
+                '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16'
+            ];
+            
+            // Destroy existing charts
+            if (barChart) barChart.destroy();
+            if (pieChart) pieChart.destroy();
+            
+            // Bar Chart
+            barChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Saldo Tabungan',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + value.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Pie Chart
+            pieChart = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterRekap(period) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filter logic can be implemented here
+            loadCharts();
+        }
+
+        // Print Functions
+        function printParticipantList() {
+            closeModal('printOptionsModal');
+            
+            if (participants.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada Data',
+                    text: 'Tidak ada peserta untuk dicetak!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            let y = 20;
+            
+            doc.setFontSize(18);
+            doc.text('DAFTAR PESERTA NABUNGKU', 105, y, { align: 'center' });
+            
+            y += 10;
+            doc.setFontSize(10);
+            doc.text('Tanggal Cetak: ' + new Date().toLocaleString('id-ID'), 105, y, { align: 'center' });
+            
+            y += 15;
+            doc.setFontSize(10);
+            
+            participants.forEach((p, index) => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                doc.setFontSize(12);
+                doc.text(`${index + 1}. ${p.name}`, 20, y);
+                y += 6;
+                
+                doc.setFontSize(9);
+                doc.text(`Telepon: ${p.phone}`, 25, y);
+                y += 5;
+                doc.text(`Bank: ${p.bank} - ${p.account}`, 25, y);
+                y += 5;
+                doc.text(`Tanggal Bergabung: ${new Date(p.createdAt).toLocaleDateString('id-ID')}`, 25, y);
+                y += 5;
+                doc.text(`Saldo Awal: ${formatCurrency(p.initialDeposit || 0)}`, 25, y);
+                y += 5;
+                doc.text(`Saldo Saat Ini: ${formatCurrency(p.balance || 0)}`, 25, y);
+                
+                if (p.target > 0) {
+                    y += 5;
+                    const progress = ((p.balance / p.target) * 100).toFixed(1);
+                    doc.text(`Target: ${formatCurrency(p.target)} (${progress}%)`, 25, y);
+                }
+                
+                y += 10;
+            });
+            
+            doc.save(`daftar_peserta_${new Date().getTime()}.pdf`);
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Daftar peserta berhasil dicetak!',
+                confirmButtonColor: '#10b981'
+            });
+        }
+
+        function printPerParticipant() {
+            closeModal('printOptionsModal');
+            
+            if (participants.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada Data',
+                    text: 'Tidak ada peserta!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            const select = document.getElementById('printParticipantSelect');
+            select.innerHTML = '<option value="">Pilih Peserta</option>';
+            participants.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+            
+            openModal('selectParticipantModal');
+        }
+
+        function processPrintParticipant() {
+            const participantId = parseInt(document.getElementById('printParticipantSelect').value);
+            if (!participantId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilih Peserta',
+                    text: 'Silakan pilih peserta terlebih dahulu!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            const participant = participants.find(p => p.id === participantId);
+            if (!participant) return;
+            
+            const participantTransactions = transactions.filter(t => t.participantId === participantId);
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            let y = 20;
+            
+            doc.setFontSize(18);
+            doc.text('DETAIL TABUNGAN PESERTA', 105, y, { align: 'center' });
+            
+            y += 15;
+            doc.setFontSize(12);
+            doc.text('Informasi Peserta', 20, y);
+            
+            y += 8;
+            doc.setFontSize(10);
+            doc.text(`Nama: ${participant.name}`, 20, y);
+            y += 6;
+            doc.text(`Telepon: ${participant.phone}`, 20, y);
+            y += 6;
+            doc.text(`Bank: ${participant.bank} - ${participant.account}`, 20, y);
+            y += 6;
+            doc.text(`Saldo Awal: ${formatCurrency(participant.initialDeposit || 0)}`, 20, y);
+            y += 6;
+            doc.text(`Saldo Saat Ini: ${formatCurrency(participant.balance || 0)}`, 20, y);
+            
+            if (participant.target > 0) {
+                y += 6;
+                const progress = ((participant.balance / participant.target) * 100).toFixed(1);
+                doc.text(`Target: ${formatCurrency(participant.target)} (${progress}%)`, 20, y);
+            }
+            
+            y += 15;
+            doc.setFontSize(12);
+            doc.text('Riwayat Transaksi', 20, y);
+            
+            y += 8;
+            doc.setFontSize(9);
+            
+            if (participantTransactions.length === 0) {
+                doc.text('Belum ada transaksi', 20, y);
+            } else {
+                participantTransactions.forEach((t, index) => {
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    const date = new Date(t.date).toLocaleDateString('id-ID');
+                    const type = t.type === 'saving' ? 'Tabungan' : 'Penarikan';
+                    const sign = t.type === 'saving' ? '+' : '-';
+                    
+                    doc.text(`${date}`, 20, y);
+                    doc.text(`${type} - ${t.note}`, 50, y);
+                    doc.text(`${sign}${formatCurrency(t.amount)}`, 150, y);
+                    y += 6;
+                });
+            }
+            
+            y += 10;
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setFontSize(8);
+            doc.text('Dicetak pada: ' + new Date().toLocaleString('id-ID'), 105, y, { align: 'center' });
+            
+            doc.save(`tabungan_${participant.name.replace(/\s/g, '_')}_${new Date().getTime()}.pdf`);
+            
+            closeModal('selectParticipantModal');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Detail tabungan berhasil dicetak!',
+                confirmButtonColor: '#10b981'
+            });
+        }
+
+        function printAllTransactions() {
+            closeModal('printOptionsModal');
+            
+            if (transactions.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada Transaksi',
+                    text: 'Tidak ada data untuk dicetak!',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const totalBalance = participants.reduce((sum, p) => sum + (p.balance || 0), 0);
+            const totalSaving = transactions.filter(t => t.type === 'saving').reduce((sum, t) => sum + t.amount, 0);
+            const totalWithdraw = transactions.filter(t => t.type === 'withdraw').reduce((sum, t) => sum + t.amount, 0);
+            
+            let y = 20;
+            
+            doc.setFontSize(18);
+            doc.text('NABUNGKU - STRUK TRANSAKSI', 105, y, { align: 'center' });
+            
+            y += 10;
+            doc.setFontSize(10);
+            doc.text('Tanggal: ' + new Date().toLocaleString('id-ID'), 105, y, { align: 'center' });
+            
+            y += 15;
+            doc.setFontSize(12);
+            doc.text('RINGKASAN', 20, y);
+            
+            y += 8;
+            doc.setFontSize(10);
+            doc.text('Total Peserta: ' + participants.length, 20, y);
+            
+            y += 6;
+            doc.text('Total Saldo: Rp ' + totalBalance.toLocaleString('id-ID'), 20, y);
+            
+            y += 6;
+            doc.text('Total Tabungan Masuk: Rp ' + totalSaving.toLocaleString('id-ID'), 20, y);
+            
+            y += 6;
+            doc.text('Total Penarikan: Rp ' + totalWithdraw.toLocaleString('id-ID'), 20, y);
+            
+            y += 15;
+            doc.setFontSize(12);
+            doc.text('DAFTAR PESERTA', 20, y);
+            
+            y += 8;
+            doc.setFontSize(9);
+            participants.forEach((p, index) => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(`${index + 1}. ${p.name}`, 20, y);
+                doc.text(`Saldo: Rp ${(p.balance || 0).toLocaleString('id-ID')}`, 120, y);
+                y += 6;
+            });
+            
+            y += 10;
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setFontSize(12);
+            doc.text('SEMUA TRANSAKSI', 20, y);
+            
+            y += 8;
+            doc.setFontSize(8);
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedTransactions.forEach((t, index) => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                const date = new Date(t.date).toLocaleDateString('id-ID');
+                const type = t.type === 'saving' ? 'Tabungan' : 'Penarikan';
+                const sign = t.type === 'saving' ? '+' : '-';
+                
+                doc.text(`${date}`, 20, y);
+                doc.text(`${t.participantName}`, 50, y);
+                doc.text(`${type}`, 100, y);
+                doc.text(`${sign}Rp ${t.amount.toLocaleString('id-ID')}`, 140, y);
+                y += 5;
+            });
+            
+            y += 15;
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setFontSize(8);
+            doc.text('Dicetak oleh: ' + currentUser, 105, y, { align: 'center' });
+            y += 5;
+            doc.text('NabungKu v.1.0 - Samudra Tech 2026', 105, y, { align: 'center' });
+            
+            doc.save(`struk_semua_transaksi_${new Date().getTime()}.pdf`);
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Struk berhasil didownload!',
+                confirmButtonColor: '#10b981'
+            });
+        }
+
+        // Crypto Ticker
+        async function fetchCryptoPrices() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,the-open-network&vs_currencies=idr');
+                const data = await response.json();
+                
+                cryptoPrices = {
+                    'IDR': '15.850',
+                    'BTC': (data.bitcoin?.idr || 0).toLocaleString('id-ID'),
+                    'ETH': (data.ethereum?.idr || 0).toLocaleString('id-ID'),
+                    'SOL': (data.solana?.idr || 0).toLocaleString('id-ID'),
+                    'TON': (data['the-open-network']?.idr || 0).toLocaleString('id-ID'),
+                    'GRASS': '150.000',
+                    'PI': '250.000'
+                };
+                
+                updateCryptoTicker();
+            } catch (error) {
+                cryptoPrices = {
+                    'IDR': '15.850',
+                    'BTC': '1.425.000.000',
+                    'ETH': '52.500.000',
+                    'SOL': '2.850.000',
+                    'TON': '95.000',
+                    'GRASS': '150.000',
+                    'PI': '250.000'
+                };
+                updateCryptoTicker();
+            }
+        }
+
+        function updateCryptoTicker() {
+            const ticker = document.getElementById('cryptoTicker');
+            let html = '';
+            
+            // Check if custom marquee text exists
+            const customMarquee = localStorage.getItem('marqueeText');
+            
+            if (customMarquee) {
+                const items = customMarquee.split(',');
+                items.forEach(item => {
+                    const trimmed = item.trim();
+                    html += `<div class="ticker-item">${trimmed}</div>`;
+                });
+            } else {
+                for (const [symbol, price] of Object.entries(cryptoPrices)) {
+                    html += `
+                        <div class="ticker-item">
+                            <span class="symbol">${symbol}:</span> Rp ${price}
+                        </div>
+                    `;
+                }
+            }
+            
+            ticker.innerHTML = html + html;
+        }
+
+        // Format Currency
+        function formatCurrency(amount) {
+            return 'Rp ' + parseInt(amount).toLocaleString('id-ID');
+        }
+
+        // Data Persistence
+        function saveData() {
+            localStorage.setItem('participants', JSON.stringify(participants));
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('news', JSON.stringify(news));
+        }
+
+        function loadData() {
+            const savedParticipants = localStorage.getItem('participants');
+            const savedTransactions = localStorage.getItem('transactions');
+            const savedNews = localStorage.getItem('news');
+            const savedTheme = localStorage.getItem('themeSettings');
+            const savedSpeed = localStorage.getItem('marqueeSpeed') || '30';
+            
+            if (savedParticipants) participants = JSON.parse(savedParticipants);
+            if (savedTransactions) transactions = JSON.parse(savedTransactions);
+            if (savedNews) news = JSON.parse(savedNews);
+            
+            if (savedTheme) {
+                const theme = JSON.parse(savedTheme);
+                document.getElementById('colorTips').value = theme.tips;
+                document.getElementById('colorUpdate').value = theme.update;
+                document.getElementById('colorInfo').value = theme.info;
+                document.getElementById('colorNav').value = theme.nav || '#10b981';
+                document.getElementById('colorNavBg').value = theme.navBg || '#10b981';
+                document.getElementById('marqueeBg').value = theme.marqueeBg || '#e0e5ec';
+                document.getElementById('marqueeTextColor').value = theme.marqueeText || '#2d3748';
+                
+                updateThemeColor('tips', theme.tips);
+                updateThemeColor('update', theme.update);
+                updateThemeColor('info', theme.info);
+                updateNavColor(theme.nav || '#10b981');
+                updateNavBgColor(theme.navBg || '#10b981');
+                updateMarqueeBg(theme.marqueeBg || '#e0e5ec');
+                updateMarqueeTextColor(theme.marqueeText || '#2d3748');
+            }
+            
+            // Load marquee speed
+            document.documentElement.style.setProperty('--marquee-speed', `${savedSpeed}s`);
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
