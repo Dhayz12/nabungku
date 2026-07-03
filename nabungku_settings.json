@@ -1,0 +1,17 @@
+{
+  "theme": {
+    "tips": "#10b981",
+    "update": "#3b82f6",
+    "info": "#f59e0b",
+    "nav": "#10b981",
+    "navBg": "#10b981",
+    "marqueeBg": "#0565eb",
+    "marqueeText": "#ffffff",
+    "progressColor": "#3b82f6"
+  },
+  "marquee": {
+    "text": "Selamat datang di aplikasi NabungKu (Tabungan Management Digital)",
+    "speed": "10"
+  },
+  "lastUpdate": "2026-07-03T04:40:31.161Z"
+}
